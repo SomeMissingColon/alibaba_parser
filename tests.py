@@ -1,5 +1,6 @@
 import requests
 import re
+import pymongo
 
 url = 'https://www.alibaba.com/product-detail/Reusable-Natural-Eco-Personalised-Hessian-Jute_60818192819.html?spm=a2700.details.0.0.5b8d75b4nD6l2I'
 
@@ -56,7 +57,15 @@ for price_points_noisy in noisy_price_infos:
             key, val = price_points_noisy[i], price_points_noisy[i + 1]
             paired_info[key] = val.replace('-1', '1000000')
 
-    price_points[paired_info['price']] = range(int(paired_info['min']), int(paired_info['max']))
+    price_points[paired_info['price']] = [int(paired_info['min']), int(paired_info['max'])]
 chars['prices'] = price_points
 
-print(chars)
+
+
+#MONGO_DB CODE
+
+myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+item_description = "Placeholder"
+mydb = myclient["alibaba-parsing"]
+mycol = mydb[item_description]
+x = mycol.insert_one(chars)
