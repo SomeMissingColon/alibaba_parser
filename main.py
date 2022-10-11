@@ -113,8 +113,31 @@ def listing_urls_to_csv(product_listings, item_description):
                     else:
                         chars[key_char] = resp[i:i + 80].split('attrValue')[1].split('"')[2]
 
-                for i in re.finditer('formatprice')
+                noisy_price_infos = []
+                for i in list(re.finditer('formatPrice', resp))[0:-2]:
+                    i = i.start()
+                    key = 'Price Points'
 
+                    def remove_special_character(string, schar):
+                        return string.replace(schar, '')
+
+                    noisy_char = resp[i + 22:i + 60]
+                    for schar in ['}', '{', ':', ',']:
+                        noisy_char = remove_special_character(noisy_char, schar)
+                    noisy_price_infos.append(noisy_char.split('"')[0:-1])
+
+                price_points = {}
+                for price_points_noisy in noisy_price_infos:
+                    paired_info = {}
+                    for i in range(len(price_points_noisy)):
+                        kv = {}
+                        if i % 2 == 0:
+                            print(price_points_noisy)
+                            key, val = price_points_noisy[i], price_points_noisy[i + 1]
+                            paired_info[key] = val.replace('-1', '1000000')
+
+                    price_points[paired_info['price']] = range(int(paired_info['min']), int(paired_info['max']))
+                chars['prices'] = price_points
 
                 # step 3: save dynamically every new listing information in csv
 
@@ -122,7 +145,7 @@ def listing_urls_to_csv(product_listings, item_description):
                     writer.writerow(chars)
                 except:
                     print(
-                        f"A problem occurred while saving the info from {product_link}\n Following info was not saved: {item_chars}")
+                        f"A problem occurred while saving the info from {product_link}\n Following info was not saved: {chars}")
         except:
             print(f"A problem occurred while gathering information for {item_description}")
 
